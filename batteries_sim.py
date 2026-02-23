@@ -3,6 +3,7 @@ import itertools
 import json
 import statistics
 from pathlib import Path
+import matplotlib.pyplot as plt
 
 
 # Default known prefix (prepended to the pair-test order if no other prefix provided)
@@ -105,6 +106,39 @@ def validate_prefix(prefix, n=8):
         raise ValueError(f"Duplicate pairs in prefix (order-insensitive): {duplicates}")
 
 
+def plot_per_placement_histograms(results, out_prefix):
+    # results: mapping string(placement)->dict with integer keys 2,3,4
+    for k in (2, 3, 4):
+        counts = {}
+        for v in results.values():
+            # v might have string keys if loaded from JSON
+            val = v.get(str(k)) if str(k) in v else v.get(k)
+            if val is None:
+                key = 'not_found'
+            else:
+                key = str(val)
+            counts[key] = counts.get(key, 0) + 1
+
+        numeric_keys = sorted([int(x) for x in counts.keys() if x != 'not_found'])
+        labels = [str(x) for x in numeric_keys]
+        heights = [counts[str(x)] for x in numeric_keys]
+        if 'not_found' in counts:
+            labels.append('not_found')
+            heights.append(counts['not_found'])
+
+        x = list(range(len(labels)))
+        plt.figure(figsize=(10, 4))
+        plt.bar(x, heights, color='C1')
+        plt.xticks(x, labels, rotation=45)
+        plt.xlabel('Tests to reach {} goods (or not_found)'.format(k))
+        plt.ylabel('Count of placements')
+        plt.title('Distribution of tests needed to find {} goods'.format(k))
+        plt.tight_layout()
+        out_path = f"{out_prefix}_find{k}.png"
+        plt.savefig(out_path)
+        plt.close()
+
+
 def load_sequences(filepath):
     p = Path(filepath)
     if not p.exists():
@@ -145,6 +179,8 @@ def main():
     parser.add_argument('--use-name', help='Use named sequence (as prefix) from sequences file')
     parser.add_argument('--pairs', type=parse_pairs_arg, help='Ad-hoc prefix pairs as JSON list, e.g. "[[6,7],[0,1]]"')
     parser.add_argument('--dump-per-placement', help='Write per-placement results to JSON file')
+    parser.add_argument('--plot-dump', help='Read per-placement JSON and plot histograms')
+    parser.add_argument('--plot-out', default='plot', help='Output filename prefix for plots produced from --plot-dump')
     args = parser.parse_args()
 
     placements = all_placements(8, 4)
@@ -193,6 +229,14 @@ def main():
         out = {str(k): v for k, v in results.items()}
         Path(args.dump_per_placement).write_text(json.dumps(out, indent=2), encoding='utf-8')
         print(f"Wrote per-placement results to {args.dump_per_placement}")
+    if args.plot_dump:
+        p = Path(args.plot_dump)
+        if not p.exists():
+            print(f"Plot input file not found: {args.plot_dump}")
+        else:
+            data = json.loads(p.read_text(encoding='utf-8'))
+            plot_per_placement_histograms(data, args.plot_out)
+            print(f"Wrote per-placement histograms with prefix {args.plot_out}")
 
 
 if __name__ == '__main__':
