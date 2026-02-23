@@ -4,6 +4,7 @@ Purpose: simulate pairwise tests on 8 batteries where exactly 4 are good. A pair
 
 **Files:**
 - `batteries_sim.py`: simulation script that enumerates all 70 placements of 4 good batteries among 8 positions and evaluates an ordered sequence of pair-tests.
+- `optimize_sequence.py`: search script that generates random unique sequences (always starting with pair (0,1)) and continuously searches for improvements across all 70 placements. Tracks best sequences separately for finding 2, 3, and 4 goods.
 - `sequences.json`: optional file (created when you save sequences) that stores named prefixes (see format below).
 
 **Quick start:**
@@ -97,3 +98,37 @@ python batteries_sim.py --plot-dump dump.json --plot-out dump_plots
 The plots show counts of placements on the y-axis and number of tests (or `not_found`) on the x-axis.
 
 If you prefer to do plotting elsewhere (notebooks or your preferred tool), the JSON dump contains all per-placement results for downstream analysis.
+
+**Searching for better sequences (`optimize_sequence.py`):**
+
+Use this script to automatically search for improved sequences by generating random unique pairs and evaluating each against all 70 placements.
+
+The optimizer:
+- Always starts each sequence with pair `(0,1)` (as specified).
+- Generates random permutations of remaining pairs.
+- Evaluates each sequence and tracks the best found for finding 2, 3, and 4 goods separately.
+- Runs indefinitely (stop with Ctrl+C).
+- Reports improvements whenever a better sequence is found for any target.
+- Prints summary statistics for all three targets after each improvement.
+
+Example:
+
+```bash
+python optimize_sequence.py
+```
+
+Sample output (abbreviated):
+```
+Starting sequence optimization (Ctrl+C to stop)...
+Tracking best sequences for finding 2, 3, and 4 goods separately
+
+Iteration 45: IMPROVED for finding 2 goods!
+  Score (mean tests): 2.8000
+  Sequence: [(0, 1), (2, 3), (4, 5), ...]
+  --- Current best sequences for all targets ---
+  Find 2 goods: mean=2.80, median=3.0, min=1, max=5, not_found=0
+  Find 3 goods: mean=8.30, median=8.0, min=2, max=14, not_found=0
+  Find 4 goods: mean=11.20, median=11.0, min=3, max=18, not_found=0
+```
+
+Stop the search by pressing Ctrl+C. The script will print the best sequences found for each target.
