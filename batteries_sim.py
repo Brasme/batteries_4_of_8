@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 
 
 # Default known prefix (prepended to the pair-test order if no other prefix provided)
-KNOWN_PREFIX = [] # [(6, 7), (0, 1), (3, 4), (0, 2), (1, 2), (3, 5), (4, 5)]
+KNOWN_PREFIX = [(6, 7), (0, 1), (3, 4), (0, 2), (1, 2), (3, 5), (4, 5)]
 
 
 def all_placements(n=8, k=4):

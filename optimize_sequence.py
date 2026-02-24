@@ -8,7 +8,6 @@ import random
 import sys
 from batteries_sim import all_placements, simulate_sequence, summarize
 
-
 def generate_random_sequence(n=8):
     """Generate a random sequence of pairs, always starting with (0,1).
     
